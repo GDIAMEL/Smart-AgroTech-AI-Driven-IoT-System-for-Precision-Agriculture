@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart AgroTech - AI-Driven IoT Dashboard</title>
+    <title>Smart AgroTech Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -15,179 +16,249 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
+            color: #333;
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 20px;
         }
 
         .header {
-            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
             margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 3px solid #4CAF50;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .header h1 {
-            color: #2c3e50;
-            font-size: 2.5em;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
             margin-bottom: 10px;
         }
 
         .header p {
-            color: #7f8c8d;
-            font-size: 1.2em;
+            text-align: center;
+            color: #666;
+            font-size: 1.1rem;
         }
 
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
             margin-bottom: 30px;
         }
 
-        .sensor-card {
-            background: white;
+        .wide-card {
+            grid-column: span 2;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             border-radius: 15px;
             padding: 25px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            border-left: 5px solid;
-            transition: transform 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .sensor-card:hover {
+        .card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
         }
 
-        .sensor-card.temperature { border-left-color: #e74c3c; }
-        .sensor-card.humidity { border-left-color: #3498db; }
-        .sensor-card.moisture { border-left-color: #8b4513; }
-        .sensor-card.light { border-left-color: #f39c12; }
-        .sensor-card.ph { border-left-color: #9b59b6; }
-
-        .sensor-header {
+        .card-header {
             display: flex;
             align-items: center;
-            margin-bottom: 15px;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
         }
 
-        .sensor-icon {
-            font-size: 2em;
+        .card-header-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             margin-right: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
         }
 
-        .sensor-title {
-            font-size: 1.2em;
+        .sensor-icon { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .weather-icon { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+        .yield-icon { background: linear-gradient(135deg, #fa709a, #fee140); }
+        .recommendations-icon { background: linear-gradient(135deg, #a8edea, #fed6e3); }
+        .trends-icon { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .ai-icon { background: linear-gradient(135deg, #ff9a9e, #fecfef); }
+
+        .card-title {
+            font-size: 1.3rem;
             font-weight: 600;
-            color: #2c3e50;
+            color: #333;
+        }
+
+        .trend-indicator {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .trend-up { color: #28a745; }
+        .trend-down { color: #dc3545; }
+        .trend-stable { color: #6c757d; }
+
+        .sensor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .sensor-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+            position: relative;
+        }
+
+        .sensor-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 8px;
+            font-weight: 500;
         }
 
         .sensor-value {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 10px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
         }
 
-        .sensor-status {
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            font-weight: 500;
+        .sensor-trend {
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .weather-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+        }
+
+        .weather-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
             text-align: center;
+            border-left: 4px solid #43e97b;
         }
 
-        .status-optimal { background: #d4edda; color: #155724; }
-        .status-warning { background: #fff3cd; color: #856404; }
-        .status-critical { background: #f8d7da; color: #721c24; }
-
-        .prediction-section {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
+        .yield-display {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            text-align: center;
+            color: white;
+            margin-bottom: 20px;
         }
 
-        .prediction-title {
-            font-size: 1.8em;
-            margin-bottom: 15px;
-        }
-
-        .prediction-value {
-            font-size: 3em;
-            font-weight: bold;
+        .yield-value {
+            font-size: 3rem;
+            font-weight: 700;
             margin-bottom: 10px;
         }
 
-        .prediction-subtitle {
-            font-size: 1.1em;
+        .yield-label {
+            font-size: 1.1rem;
             opacity: 0.9;
         }
 
-        .recommendations {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        .chart-container {
+            height: 300px;
+            margin-top: 20px;
         }
 
-        .recommendations h3 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-            font-size: 1.5em;
+        .recommendations-list {
+            list-style: none;
         }
 
         .recommendation-item {
             background: #f8f9fa;
-            padding: 15px;
-            margin-bottom: 10px;
             border-radius: 10px;
-            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-left: 4px solid #fa709a;
+            transition: background 0.3s ease;
         }
 
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 20px;
+        .recommendation-item:hover {
+            background: #e9ecef;
         }
 
-        .btn {
-            padding: 12px 25px;
-            border: none;
-            border-radius: 25px;
-            font-size: 1em;
+        .recommendation-category {
             font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            color: #333;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
         }
 
-        .btn-primary {
-            background: #4CAF50;
+        .recommendation-text {
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .ai-suggestion {
+            background: linear-gradient(135deg, #ff9a9e, #fecfef);
+            color: white;
+            border-left: 4px solid #ff6b9d;
+        }
+
+        .ai-suggestion .recommendation-category {
             color: white;
         }
 
-        .btn-primary:hover {
-            background: #45a049;
-            transform: translateY(-2px);
+        .ai-suggestion .recommendation-text {
+            color: rgba(255, 255, 255, 0.9);
         }
 
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
+        .priority-high {
+            border-left-color: #dc3545;
+            background: #fff5f5;
         }
 
-        .btn-secondary:hover {
-            background: #5a6268;
-            transform: translateY(-2px);
+        .priority-medium {
+            border-left-color: #ffc107;
+            background: #fffbf0;
+        }
+
+        .priority-low {
+            border-left-color: #28a745;
+            background: #f8fff8;
         }
 
         .status-indicator {
@@ -198,325 +269,688 @@
             margin-right: 8px;
         }
 
-        .status-online { background: #4CAF50; }
-        .status-offline { background: #f44336; }
+        .status-good { background-color: #28a745; }
+        .status-warning { background-color: #ffc107; }
+        .status-critical { background-color: #dc3545; }
 
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
+        .update-time {
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
         }
 
-        .updating {
-            animation: pulse 1s infinite;
+        .control-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .insight-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+
+        .insight-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .insight-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        @media (max-width: 1200px) {
+            .wide-card {
+                grid-column: span 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .control-buttons {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1> Smart AgroTech Dashboard</h1>
-            <p>AI-Driven IoT System for Precision Agriculture</p>
-            <div style="margin-top: 15px;">
-                <span class="status-indicator status-online"></span>
-                <span id="connection-status">System Online</span>
-            </div>
-        </div>
-
-        <div class="controls">
-            <button class="btn btn-primary" onclick="startSimulation()">Start Real-time Simulation</button>
-            <button class="btn btn-secondary" onclick="stopSimulation()">Stop Simulation</button>
-            <button class="btn btn-primary" onclick="generateReport()">Generate Report</button>
+            <h1>Smart AgroTech Dashboard</h1>
+            <p>AI-Driven IoT System for Precision Agriculture with Trend Analysis</p>
         </div>
 
         <div class="dashboard-grid">
-            <div class="sensor-card temperature">
-                <div class="sensor-header">
-                    <div class="sensor-icon">🌡️</div>
-                    <div class="sensor-title">Temperature</div>
+            <!-- Sensor Readings Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="card-icon sensor-icon">S</div>
+                        <div class="card-title">Sensor Readings</div>
+                    </div>
                 </div>
-                <div class="sensor-value" id="temperature-value">25.0°C</div>
-                <div class="sensor-status status-optimal" id="temperature-status">Optimal</div>
+                <div class="sensor-grid">
+                    <div class="sensor-item">
+                        <div class="sensor-label">Temperature</div>
+                        <div class="sensor-value" id="temperature">--°C</div>
+                        <div class="sensor-trend" id="temp-trend">--</div>
+                    </div>
+                    <div class="sensor-item">
+                        <div class="sensor-label">Humidity</div>
+                        <div class="sensor-value" id="humidity">--%</div>
+                        <div class="sensor-trend" id="humidity-trend">--</div>
+                    </div>
+                    <div class="sensor-item">
+                        <div class="sensor-label">Soil Moisture</div>
+                        <div class="sensor-value" id="soil-moisture">--%</div>
+                        <div class="sensor-trend" id="moisture-trend">--</div>
+                    </div>
+                    <div class="sensor-item">
+                        <div class="sensor-label">Light Intensity</div>
+                        <div class="sensor-value" id="light-intensity">-- lux</div>
+                        <div class="sensor-trend" id="light-trend">--</div>
+                    </div>
+                    <div class="sensor-item">
+                        <div class="sensor-label">Soil pH</div>
+                        <div class="sensor-value" id="soil-ph">--</div>
+                        <div class="sensor-trend" id="ph-trend">--</div>
+                    </div>
+                </div>
             </div>
 
-            <div class="sensor-card humidity">
-                <div class="sensor-header">
-                    <div class="sensor-icon">💧</div>
-                    <div class="sensor-title">Humidity</div>
+            <!-- Trend Analysis Card -->
+            <div class="card wide-card">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="card-icon trends-icon">T</div>
+                        <div class="card-title">24-Hour Trend Analysis</div>
+                    </div>
                 </div>
-                <div class="sensor-value" id="humidity-value">65.0%</div>
-                <div class="sensor-status status-optimal" id="humidity-status">Optimal</div>
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
             </div>
 
-            <div class="sensor-card moisture">
-                <div class="sensor-header">
-                    <div class="sensor-icon">🌱</div>
-                    <div class="sensor-title">Soil Moisture</div>
+            <!-- Weather Information Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="card-icon weather-icon">W</div>
+                        <div class="card-title">Weather Conditions</div>
+                    </div>
                 </div>
-                <div class="sensor-value" id="moisture-value">50.0%</div>
-                <div class="sensor-status status-optimal" id="moisture-status">Optimal</div>
+                <div class="weather-info">
+                    <div class="weather-item">
+                        <div class="sensor-label">Condition</div>
+                        <div class="sensor-value" id="weather-condition">--</div>
+                    </div>
+                    <div class="weather-item">
+                        <div class="sensor-label">Wind Speed</div>
+                        <div class="sensor-value" id="wind-speed">-- km/h</div>
+                    </div>
+                    <div class="weather-item">
+                        <div class="sensor-label">Pressure</div>
+                        <div class="sensor-value" id="pressure">-- hPa</div>
+                    </div>
+                    <div class="weather-item">
+                        <div class="sensor-label">UV Index</div>
+                        <div class="sensor-value" id="uv-index">--</div>
+                    </div>
+                </div>
             </div>
 
-            <div class="sensor-card light">
-                <div class="sensor-header">
-                    <div class="sensor-icon">☀️</div>
-                    <div class="sensor-title">Light Intensity</div>
+            <!-- Yield Prediction Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="card-icon yield-icon">Y</div>
+                        <div class="card-title">Crop Yield Prediction</div>
+                    </div>
+                    <div class="trend-indicator" id="yield-trend-indicator">
+                        <span>--</span>
+                    </div>
                 </div>
-                <div class="sensor-value" id="light-value">800 lux</div>
-                <div class="sensor-status status-optimal" id="light-status">Optimal</div>
+                <div class="yield-display">
+                    <div class="yield-value" id="predicted-yield">--</div>
+                    <div class="yield-label">kg/hectare</div>
+                </div>
+                <div style="text-align: center; color: #666;">
+                    <span class="status-indicator status-good"></span>
+                    Prediction Confidence: <span id="confidence">--%</span>
+                </div>
+                <div class="insights-grid">
+                    <div class="insight-card">
+                        <div class="insight-value" id="weekly-avg">--</div>
+                        <div class="insight-label">Weekly Average</div>
+                    </div>
+                    <div class="insight-card">
+                        <div class="insight-value" id="seasonal-trend">--</div>
+                        <div class="insight-label">Seasonal Trend</div>
+                    </div>
+                </div>
             </div>
 
-            <div class="sensor-card ph">
-                <div class="sensor-header">
-                    <div class="sensor-icon">🧪</div>
-                    <div class="sensor-title">Soil pH</div>
+            <!-- AI Insights & Recommendations Card -->
+            <div class="card wide-card">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="card-icon ai-icon">AI</div>
+                        <div class="card-title">AI Insights & Smart Recommendations</div>
+                    </div>
                 </div>
-                <div class="sensor-value" id="ph-value">6.5</div>
-                <div class="sensor-status status-optimal" id="ph-status">Optimal</div>
+                <ul class="recommendations-list" id="recommendations">
+                    <li class="recommendation-item">
+                        <div class="recommendation-category">System</div>
+                        <div class="recommendation-text">Initializing AI analysis...</div>
+                    </li>
+                </ul>
             </div>
         </div>
 
-        <div class="prediction-section">
-            <div class="prediction-title">🤖 AI Crop Yield Prediction</div>
-            <div class="prediction-value" id="yield-prediction">2,819 kg/ha</div>
-            <div class="prediction-subtitle">Estimated yield based on current conditions</div>
+        <div class="control-panel">
+            <div class="control-buttons">
+                <button class="btn btn-primary" onclick="updateData()">Refresh Data</button>
+                <button class="btn btn-secondary" onclick="toggleAutoUpdate()">Auto Update: ON</button>
+                <button class="btn btn-primary" onclick="exportData()">Export Report</button>
+                <button class="btn btn-secondary" onclick="resetTrends()">Reset Trends</button>
+            </div>
         </div>
 
-        <div class="recommendations">
-            <h3>📋 Smart Recommendations</h3>
-            <div id="recommendations-list">
-                <div class="recommendation-item">✅ All conditions are optimal!</div>
-            </div>
+        <div class="update-time">
+            Last Updated: <span id="last-update">--</span>
         </div>
     </div>
 
     <script>
-        // Sensor data and simulation
-        let simulationInterval;
-        let isSimulating = false;
-
-        // AI Model coefficients (simplified version of the trained model)
-        const modelWeights = {
-            temperature: 0.435,
-            humidity: 0.064,
-            soil_moisture: 0.109,
-            light_intensity: 0.105,
-            soil_ph: 0.287
+        let autoUpdateEnabled = true;
+        let updateInterval;
+        let historicalData = {
+            temperature: [],
+            humidity: [],
+            soilMoisture: [],
+            lightIntensity: [],
+            soilPH: [],
+            yieldPrediction: [],
+            timestamps: []
         };
+        let trendChart;
 
-        // Current sensor readings
-        let sensorData = {
-            temperature: 25.0,
-            humidity: 65.0,
-            soil_moisture: 50.0,
-            light_intensity: 800,
-            soil_ph: 6.5
-        };
-
-        function predictYield(temp, humidity, moisture, light, ph) {
-            // Simplified yield prediction based on optimal ranges
-            let baseYield = 3000;
-            
-            // Temperature factor (optimal 20-30°C)
-            let tempFactor = (temp >= 20 && temp <= 30) ? 1.0 : 
-                           (temp < 20) ? 0.7 + (temp - 10) * 0.03 : 
-                           1.0 - (temp - 30) * 0.04;
-            
-            // Humidity factor (optimal 50-70%)
-            let humidityFactor = (humidity >= 50 && humidity <= 70) ? 1.0 :
-                               (humidity < 50) ? 0.6 + humidity * 0.008 :
-                               1.0 - (humidity - 70) * 0.01;
-            
-            // Soil moisture factor (optimal 40-60%)
-            let moistureFactor = (moisture >= 40 && moisture <= 60) ? 1.0 :
-                               (moisture < 40) ? 0.5 + moisture * 0.0125 :
-                               1.0 - (moisture - 60) * 0.015;
-            
-            // Light factor (optimal 600-1000 lux)
-            let lightFactor = (light >= 600 && light <= 1000) ? 1.0 :
-                            (light < 600) ? 0.4 + light * 0.001 :
-                            1.0 - (light - 1000) * 0.0005;
-            
-            // pH factor (optimal 6-7)
-            let phFactor = (ph >= 6 && ph <= 7) ? 1.0 :
-                         (ph < 6) ? 0.5 + (ph - 4.5) * 0.33 :
-                         1.0 - (ph - 7) * 0.2;
-            
-            let yield = baseYield * tempFactor * humidityFactor * moistureFactor * lightFactor * phFactor;
-            return Math.max(500, Math.min(6000, yield));
+        // Initialize trend chart
+        function initTrendChart() {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Temperature (°C)',
+                            data: [],
+                            borderColor: '#ff6384',
+                            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Humidity (%)',
+                            data: [],
+                            borderColor: '#36a2eb',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Soil Moisture (%)',
+                            data: [],
+                            borderColor: '#4bc0c0',
+                            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    }
+                }
+            });
         }
 
-        function generateRecommendations(temp, humidity, moisture, light, ph) {
-            let recommendations = [];
+        // Simulated sensor data generation with slight variations for trends
+        function generateSensorData() {
+            const now = new Date();
+            const hour = now.getHours();
             
-            if (moisture < 40) {
-                recommendations.push("🚰 Irrigation needed - Soil moisture is low");
-            } else if (moisture > 60) {
-                recommendations.push("⚠️ Reduce watering - Soil moisture is high");
+            // Base values with time-based variations
+            let baseTemp = 25 + Math.sin(hour * Math.PI / 12) * 8; // Temperature cycle
+            let baseHumidity = 55 + Math.cos(hour * Math.PI / 12) * 15; // Humidity cycle
+            let baseMoisture = 50 + Math.sin((hour + 6) * Math.PI / 12) * 20; // Moisture cycle
+            
+            return {
+                temperature: Math.max(15, Math.min(40, baseTemp + (Math.random() - 0.5) * 4)).toFixed(1),
+                humidity: Math.max(30, Math.min(90, baseHumidity + (Math.random() - 0.5) * 8)).toFixed(1),
+                soilMoisture: Math.max(20, Math.min(80, baseMoisture + (Math.random() - 0.5) * 6)).toFixed(1),
+                lightIntensity: Math.floor(Math.random() * 30000 + 25000 + (hour > 6 && hour < 18 ? 20000 : -10000)),
+                soilPH: (6.5 + (Math.random() - 0.5) * 1.5).toFixed(1)
+            };
+        }
+
+        // Calculate trend direction
+        function calculateTrend(data, periods = 3) {
+            if (data.length < periods) return 'stable';
+            
+            const recent = data.slice(-periods);
+            const avg1 = recent.slice(0, Math.floor(periods/2)).reduce((a, b) => a + b, 0) / Math.floor(periods/2);
+            const avg2 = recent.slice(Math.floor(periods/2)).reduce((a, b) => a + b, 0) / (periods - Math.floor(periods/2));
+            
+            const change = ((avg2 - avg1) / avg1) * 100;
+            
+            if (change > 2) return 'up';
+            if (change < -2) return 'down';
+            return 'stable';
+        }
+
+        // Generate AI-powered recommendations
+        function generateAIRecommendations(sensorData, weatherData, trends) {
+            const recommendations = [];
+            
+            // AI Predictive Analysis
+            const tempTrend = calculateTrend(historicalData.temperature);
+            const moistureTrend = calculateTrend(historicalData.soilMoisture);
+            const yieldTrend = calculateTrend(historicalData.yieldPrediction);
+            
+            // High Priority AI Suggestions
+            if (tempTrend === 'up' && parseFloat(sensorData.temperature) > 32) {
+                recommendations.push({
+                    category: 'AI Alert - High Priority',
+                    text: 'Rising temperature trend detected. Implement cooling measures within 2 hours to prevent heat stress. Consider shade nets or misting systems.',
+                    priority: 'high',
+                    type: 'ai'
+                });
             }
             
-            if (ph < 6) {
-                recommendations.push("🧪 Add lime - Soil is too acidic");
-            } else if (ph > 7) {
-                recommendations.push("🧪 Add sulfur - Soil is too alkaline");
+            if (moistureTrend === 'down' && parseFloat(sensorData.soilMoisture) < 35) {
+                recommendations.push({
+                    category: 'AI Alert - High Priority',
+                    text: 'Declining soil moisture trend with current low levels. Immediate irrigation required. Predicted water stress in 6-8 hours.',
+                    priority: 'high',
+                    type: 'ai'
+                });
             }
             
-            if (temp > 30) {
-                recommendations.push("🌡️ Consider shade/cooling - Temperature is high");
-            } else if (temp < 20) {
-                recommendations.push("🌡️ Consider greenhouse/heating - Temperature is low");
+            // Medium Priority AI Insights
+            if (yieldTrend === 'down') {
+                recommendations.push({
+                    category: 'AI Insight - Yield Optimization',
+                    text: 'Yield prediction showing downward trend. Analysis suggests optimizing nutrient balance and irrigation schedule for next 48 hours.',
+                    priority: 'medium',
+                    type: 'ai'
+                });
             }
             
-            if (humidity < 50) {
-                recommendations.push("💨 Increase humidity - Air is too dry");
-            } else if (humidity > 70) {
-                recommendations.push("💨 Improve ventilation - Humidity is high");
+            // Weather-based AI predictions
+            if (weatherData.condition === 'Light Rain' && parseFloat(sensorData.soilMoisture) > 65) {
+                recommendations.push({
+                    category: 'AI Weather Analysis',
+                    text: 'Rain forecast with high soil moisture detected. Risk of waterlogging in 12-24 hours. Prepare drainage systems.',
+                    priority: 'medium',
+                    type: 'ai'
+                });
             }
             
-            if (light < 600) {
-                recommendations.push("💡 Increase light exposure - Light intensity is low");
+            // Seasonal AI recommendations
+            const month = new Date().getMonth();
+            if (month >= 2 && month <= 4) { // Spring
+                recommendations.push({
+                    category: 'AI Seasonal Insight',
+                    text: 'Spring growth phase detected. Optimal time for nitrogen-rich fertilizer application. Increase monitoring frequency by 25%.',
+                    priority: 'low',
+                    type: 'ai'
+                });
+            }
+            
+            // Pattern recognition insights
+            if (historicalData.temperature.length > 10) {
+                const tempVariance = calculateVariance(historicalData.temperature.slice(-10));
+                if (tempVariance > 15) {
+                    recommendations.push({
+                        category: 'AI Pattern Analysis',
+                        text: 'High temperature variability detected. Consider climate control systems to maintain stable growing conditions.',
+                        priority: 'medium',
+                        type: 'ai'
+                    });
+                }
+            }
+            
+            // Standard recommendations
+            if (parseFloat(sensorData.soilPH) < 6.0) {
+                recommendations.push({
+                    category: 'Soil Management',
+                    text: 'Soil pH is acidic. Apply lime to increase pH levels for optimal nutrient uptake.',
+                    priority: 'medium',
+                    type: 'standard'
+                });
+            }
+            
+            if (parseFloat(sensorData.lightIntensity) < 30000) {
+                recommendations.push({
+                    category: 'Light Management',
+                    text: 'Low light intensity detected. Consider supplemental LED lighting for optimal photosynthesis.',
+                    priority: 'low',
+                    type: 'standard'
+                });
+            }
+            
+            // Pest control predictions based on conditions
+            if (parseFloat(sensorData.humidity) > 70 && parseFloat(sensorData.temperature) > 25) {
+                recommendations.push({
+                    category: 'AI Pest Prediction',
+                    text: 'Conditions favorable for fungal diseases. Preventive fungicide application recommended within 24 hours.',
+                    priority: 'medium',
+                    type: 'ai'
+                });
             }
             
             if (recommendations.length === 0) {
-                recommendations.push("✅ All conditions are optimal!");
+                recommendations.push({
+                    category: 'AI Status',
+                    text: 'All parameters within optimal ranges. AI monitoring continues. Next optimization cycle in 4 hours.',
+                    priority: 'low',
+                    type: 'ai'
+                });
             }
             
             return recommendations;
         }
 
-        function getStatus(value, optimal_min, optimal_max) {
-            if (value >= optimal_min && value <= optimal_max) {
-                return { class: 'status-optimal', text: 'Optimal' };
-            } else if (value < optimal_min * 0.8 || value > optimal_max * 1.2) {
-                return { class: 'status-critical', text: 'Critical' };
+        // Calculate variance for pattern analysis
+        function calculateVariance(data) {
+            const mean = data.reduce((a, b) => a + b, 0) / data.length;
+            const variance = data.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / data.length;
+            return variance;
+        }
+
+        // Update trend indicators
+        function updateTrendIndicators() {
+            const trends = {
+                temperature: calculateTrend(historicalData.temperature),
+                humidity: calculateTrend(historicalData.humidity),
+                soilMoisture: calculateTrend(historicalData.soilMoisture),
+                lightIntensity: calculateTrend(historicalData.lightIntensity),
+                soilPH: calculateTrend(historicalData.soilPH),
+                yield: calculateTrend(historicalData.yieldPrediction)
+            };
+            
+            // Update sensor trend indicators
+            updateTrendDisplay('temp-trend', trends.temperature);
+            updateTrendDisplay('humidity-trend', trends.humidity);
+            updateTrendDisplay('moisture-trend', trends.soilMoisture);
+            updateTrendDisplay('light-trend', trends.lightIntensity);
+            updateTrendDisplay('ph-trend', trends.soilPH);
+            
+            // Update yield trend indicator
+            const yieldTrendElement = document.getElementById('yield-trend-indicator');
+            const trendText = trends.yield === 'up' ? '↗ Increasing' : 
+                             trends.yield === 'down' ? '↘ Decreasing' : '→ Stable';
+            const trendClass = trends.yield === 'up' ? 'trend-up' : 
+                              trends.yield === 'down' ? 'trend-down' : 'trend-stable';
+            
+            yieldTrendElement.innerHTML = `<span class="${trendClass}">${trendText}</span>`;
+        }
+
+        function updateTrendDisplay(elementId, trend) {
+            const element = document.getElementById(elementId);
+            const trendSymbol = trend === 'up' ? '↗' : trend === 'down' ? '↘' : '→';
+            const trendClass = trend === 'up' ? 'trend-up' : trend === 'down' ? 'trend-down' : 'trend-stable';
+            element.innerHTML = `<span class="${trendClass}">${trendSymbol} ${trend}</span>`;
+        }
+
+        // Update chart with new data
+        function updateChart() {
+            if (historicalData.timestamps.length > 20) {
+                // Keep only last 20 data points
+                Object.keys(historicalData).forEach(key => {
+                    historicalData[key] = historicalData[key].slice(-20);
+                });
+            }
+            
+            trendChart.data.labels = historicalData.timestamps.map(ts => 
+                new Date(ts).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+            );
+            trendChart.data.datasets[0].data = historicalData.temperature;
+            trendChart.data.datasets[1].data = historicalData.humidity;
+            trendChart.data.datasets[2].data = historicalData.soilMoisture;
+            trendChart.update();
+        }
+
+        // Crop yield prediction with trend analysis
+        function predictYield(sensorData) {
+            const baseYield = 3000;
+            let yieldModifier = 1;
+            
+            // Current conditions factor
+            if (sensorData.temperature >= 20 && sensorData.temperature <= 30) {
+                yieldModifier *= 1.1;
             } else {
-                return { class: 'status-warning', text: 'Warning' };
+                yieldModifier *= 0.9;
             }
+            
+            if (sensorData.soilMoisture >= 40 && sensorData.soilMoisture <= 70) {
+                yieldModifier *= 1.15;
+            } else {
+                yieldModifier *= 0.85;
+            }
+            
+            if (sensorData.soilPH >= 6.0 && sensorData.soilPH <= 7.5) {
+                yieldModifier *= 1.1;
+            } else {
+                yieldModifier *= 0.9;
+            }
+            
+            // Trend-based adjustments
+            if (historicalData.temperature.length > 5) {
+                const tempTrend = calculateTrend(historicalData.temperature);
+                if (tempTrend === 'up' && parseFloat(sensorData.temperature) > 30) {
+                    yieldModifier *= 0.95; // Heat stress penalty
+                }
+                if (tempTrend === 'down' && parseFloat(sensorData.temperature) < 20) {
+                    yieldModifier *= 0.95; // Cold stress penalty
+                }
+            }
+            
+            return Math.floor(baseYield * yieldModifier);
         }
 
-        function updateDisplay() {
-            // Update sensor values
-            document.getElementById('temperature-value').textContent = sensorData.temperature.toFixed(1) + '°C';
-            document.getElementById('humidity-value').textContent = sensorData.humidity.toFixed(1) + '%';
-            document.getElementById('moisture-value').textContent = sensorData.soil_moisture.toFixed(1) + '%';
-            document.getElementById('light-value').textContent = Math.round(sensorData.light_intensity) + ' lux';
-            document.getElementById('ph-value').textContent = sensorData.soil_ph.toFixed(1);
-
-            // Update status indicators
-            let tempStatus = getStatus(sensorData.temperature, 20, 30);
-            let humidityStatus = getStatus(sensorData.humidity, 50, 70);
-            let moistureStatus = getStatus(sensorData.soil_moisture, 40, 60);
-            let lightStatus = getStatus(sensorData.light_intensity, 600, 1000);
-            let phStatus = getStatus(sensorData.soil_ph, 6, 7);
-
-            document.getElementById('temperature-status').className = 'sensor-status ' + tempStatus.class;
-            document.getElementById('temperature-status').textContent = tempStatus.text;
+        // Update dashboard data
+        function updateData() {
+            const sensorData = generateSensorData();
+            const weatherData = generateWeatherData();
+            const predictedYield = predictYield(sensorData);
             
-            document.getElementById('humidity-status').className = 'sensor-status ' + humidityStatus.class;
-            document.getElementById('humidity-status').textContent = humidityStatus.text;
+            // Store historical data
+            historicalData.temperature.push(parseFloat(sensorData.temperature));
+            historicalData.humidity.push(parseFloat(sensorData.humidity));
+            historicalData.soilMoisture.push(parseFloat(sensorData.soilMoisture));
+            historicalData.lightIntensity.push(parseFloat(sensorData.lightIntensity));
+            historicalData.soilPH.push(parseFloat(sensorData.soilPH));
+            historicalData.yieldPrediction.push(predictedYield);
+            historicalData.timestamps.push(new Date().toISOString());
             
-            document.getElementById('moisture-status').className = 'sensor-status ' + moistureStatus.class;
-            document.getElementById('moisture-status').textContent = moistureStatus.text;
+            // Update sensor readings
+            document.getElementById('temperature').textContent = sensorData.temperature + '°C';
+            document.getElementById('humidity').textContent = sensorData.humidity + '%';
+            document.getElementById('soil-moisture').textContent = sensorData.soilMoisture + '%';
+            document.getElementById('light-intensity').textContent = parseInt(sensorData.lightIntensity).toLocaleString() + ' lux';
+            document.getElementById('soil-ph').textContent = sensorData.soilPH;
             
-            document.getElementById('light-status').className = 'sensor-status ' + lightStatus.class;
-            document.getElementById('light-status').textContent = lightStatus.text;
+            // Update weather data
+            document.getElementById('weather-condition').textContent = weatherData.condition;
+            document.getElementById('wind-speed').textContent = weatherData.windSpeed + ' km/h';
+            document.getElementById('pressure').textContent = weatherData.pressure + ' hPa';
+            document.getElementById('uv-index').textContent = weatherData.uvIndex;
             
-            document.getElementById('ph-status').className = 'sensor-status ' + phStatus.class;
-            document.getElementById('ph-status').textContent = phStatus.text;
-
             // Update yield prediction
-            let predictedYield = predictYield(
-                sensorData.temperature,
-                sensorData.humidity,
-                sensorData.soil_moisture,
-                sensorData.light_intensity,
-                sensorData.soil_ph
-            );
-            document.getElementById('yield-prediction').textContent = Math.round(predictedYield).toLocaleString() + ' kg/ha';
-
+            document.getElementById('predicted-yield').textContent = predictedYield.toLocaleString();
+            document.getElementById('confidence').textContent = Math.floor(Math.random() * 15 + 85) + '%';
+            
+            // Update insights
+            if (historicalData.yieldPrediction.length > 7) {
+                const weeklyAvg = Math.floor(historicalData.yieldPrediction.slice(-7).reduce((a, b) => a + b, 0) / 7);
+                document.getElementById('weekly-avg').textContent = weeklyAvg.toLocaleString();
+            }
+            
+            const seasonalTrends = ['Optimal', 'Good', 'Fair', 'Poor'];
+            document.getElementById('seasonal-trend').textContent = seasonalTrends[Math.floor(Math.random() * seasonalTrends.length)];
+            
+            // Update trend indicators
+            updateTrendIndicators();
+            
+            // Update chart
+            updateChart();
+            
+            // Generate AI recommendations
+            const recommendations = generateAIRecommendations(sensorData, weatherData);
+            
             // Update recommendations
-            let recommendations = generateRecommendations(
-                sensorData.temperature,
-                sensorData.humidity,
-                sensorData.soil_moisture,
-                sensorData.light_intensity,
-                sensorData.soil_ph
-            );
+            const recommendationsList = document.getElementById('recommendations');
+            recommendationsList.innerHTML = '';
+            recommendations.forEach(rec => {
+                const li = document.createElement('li');
+                li.className = `recommendation-item ${rec.type === 'ai' ? 'ai-suggestion' : ''} priority-${rec.priority}`;
+                li.innerHTML = `
+                    <div class="recommendation-category">${rec.category}</div>
+                    <div class="recommendation-text">${rec.text}</div>
+                `;
+                recommendationsList.appendChild(li);
+            });
             
-            let recommendationsHtml = recommendations.map(rec => 
-                `<div class="recommendation-item">${rec}</div>`
-            ).join('');
-            document.getElementById('recommendations-list').innerHTML = recommendationsHtml;
+            // Update timestamp
+            document.getElementById('last-update').textContent = new Date().toLocaleString();
         }
 
-        function simulateSensorData() {
-            // Add realistic variations to sensor data
-            sensorData.temperature += (Math.random() - 0.5) * 2;
-            sensorData.humidity += (Math.random() - 0.5) * 3;
-            sensorData.soil_moisture += (Math.random() - 0.5) * 2;
-            sensorData.light_intensity += (Math.random() - 0.5) * 50;
-            sensorData.soil_ph += (Math.random() - 0.5) * 0.2;
-
-            // Keep values within realistic ranges
-            sensorData.temperature = Math.max(10, Math.min(45, sensorData.temperature));
-            sensorData.humidity = Math.max(20, Math.min(90, sensorData.humidity));
-            sensorData.soil_moisture = Math.max(10, Math.min(80, sensorData.soil_moisture));
-            sensorData.light_intensity = Math.max(200, Math.min(1500, sensorData.light_intensity));
-            sensorData.soil_ph = Math.max(4.5, Math.min(8.5, sensorData.soil_ph));
-
-            updateDisplay();
+        // Simulated weather data generation
+        function generateWeatherData() {
+            const conditions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Light Rain', 'Clear'];
+            return {
+                condition: conditions[Math.floor(Math.random() * conditions.length)],
+                windSpeed: (Math.random() * 20 + 5).toFixed(1),
+                pressure: Math.floor(Math.random() * 50 + 1000),
+                uvIndex: Math.floor(Math.random() * 11)
+            };
         }
 
-        function startSimulation() {
-            if (!isSimulating) {
-                isSimulating = true;
-                document.getElementById('connection-status').textContent = 'Real-time Simulation Active';
-                simulationInterval = setInterval(simulateSensorData, 2000);
-                
-                // Add updating animation
-                document.querySelectorAll('.sensor-card').forEach(card => {
-                    card.classList.add('updating');
-                });
+        // Toggle auto-update
+        function toggleAutoUpdate() {
+            const button = event.target;
+            if (autoUpdateEnabled) {
+                clearInterval(updateInterval);
+                autoUpdateEnabled = false;
+                button.textContent = 'Auto Update: OFF';
+                button.style.background = 'linear-gradient(135deg, #dc3545, #c82333)';
+            } else {
+                updateInterval = setInterval(updateData, 5000);
+                autoUpdateEnabled = true;
+                button.textContent = 'Auto Update: ON';
+                button.style.background = 'linear-gradient(135deg, #43e97b, #38f9d7)';
             }
         }
 
-        function stopSimulation() {
-            if (isSimulating) {
-                isSimulating = false;
-                clearInterval(simulationInterval);
-                document.getElementById('connection-status').textContent = 'System Online';
-                
-                // Remove updating animation
-                document.querySelectorAll('.sensor-card').forEach(card => {
-                    card.classList.remove('updating');
-                });
-            }
+        // Reset trends
+        function resetTrends() {
+            historicalData = {
+                temperature: [],
+                humidity: [],
+                soilMoisture: [],
+                lightIntensity: [],
+                soilPH: [],
+                yieldPrediction: [],
+                timestamps: []
+            };
+            trendChart.data.labels = [];
+            trendChart.data.datasets.forEach(dataset => dataset.data = []);
+            trendChart.update();
+            alert('Trend data has been reset.');
         }
 
-        function generateReport() {
-            let report = `
-Smart AgroTech System Report
-Generated: ${new Date().toLocaleString()}
-
-Current Sensor Readings:
-- Temperature: ${sensorData.temperature.toFixed(1)}°C
-- Humidity: ${sensorData.humidity.toFixed(1)}%
-- Soil Moisture: ${sensorData.soil_moisture.toFixed(1)}%
-- Light Intensity: ${Math.round(sensorData.light_intensity)} lux
-- Soil pH: ${sensorData.soil_ph.toFixed(1)}
-
-AI Prediction:
-- Estimated Yield: ${Math.round(predictYield(sensorData.temperature, sensorData.humidity, sensorData.soil_moisture, sensorData.light_intensity, sensorData.soil_ph)).toLocaleString()} kg/ha
-
-Recommendations:
-${generateRecommendations(sensorData.temperature, sensorData.humidity, sensorData.soil_moisture, sensorData.light_intensity, sensorData.soil_ph).map(rec => '- ' + rec.replace(/[🚰⚠️🧪🌡️💨💡✅]/g, '')).join('\n')}
-            `;
-            
-            alert(report);
+        // Export data (placeholder)
+        function exportData() {
+            alert('Export functionality would generate a comprehensive report with historical data, trends, AI insights, and predictions.');
         }
 
-        // Initialize display
-        updateDisplay();
+        // Initialize dashboard
+        window.onload = function() {
+            initTrendChart();
+            updateData();
+            updateInterval = setInterval(updateData, 5000);
+        };
     </script>
 </body>
 </html>
